@@ -22,8 +22,8 @@ router.get('/google/callback',
                 return res.redirect('/auth/login');
             }
         })
-        console.log('User authenticated: ', req.user);
-        console.log('Session: ', req.session);
+        // console.log('User authenticated: ', req.user);
+        // console.log('Session: ', req.session);
         res.redirect('/');
 });
 

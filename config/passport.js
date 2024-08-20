@@ -20,11 +20,11 @@ passport.use(new GoogleStrategy({
             const fullName = profile.displayName;
             const username = profile.name.givenName;
 
-            console.log("Info captured from google acc: ");
-            console.log("googleID: "+ googleId);
-            console.log("email"+ email);
-            console.log("fullName"+ fullName);
-            console.log("username"+ username);
+            // console.log("Info captured from google acc: ");
+            // console.log("googleID: "+ googleId);
+            // console.log("email"+ email);
+            // console.log("fullName"+ fullName);
+            // console.log("username"+ username);
 
             const authProviderResult = await pool.query('SELECT * FROM auth_providers WHERE provider_name = $1 AND provider_uid = $2', ['google', googleId]);
 
@@ -54,14 +54,29 @@ passport.use(new GoogleStrategy({
 ));
 
 passport.serializeUser((user, done) => {
-    done(null, user.user_id);
+    // done(null, user.user_id);
+
+    console.log('Serializing user:', user);
+    done(null, { user_id: user.user_id, fullName: user.full_name});
 })
 
-passport.deserializeUser( async (id, done) => {
+passport.deserializeUser( async (user, done) => {
+    console.log('deserializeUser called with:', user);
     try{
-        const userResult = await pool.query('SELECT * FROM users WHERE user_id = $1', [id]);
-        done(null, userResult.rows[0]);
+        const userResult = await pool.query('SELECT * FROM users WHERE user_id = $1', [user.user_id]);
+        // const updatedUser = userResult.rows[0];
+        // // done(null, userResult.rows[0]);
+        // done(null, {user_id: updatedUser.user_id, fullName: updatedUser.full_name})
+        if(userResult.rows.length > 0){
+            const updatedUser = userResult.rows[0];
+            console.log('User found and deserialized:',updatedUser);
+            done(null, {user_id: updatedUser.user_id, fullName: updatedUser.full_name});
+        } else {
+            console.log('User not found');
+            done(new Error('User not found'), null);
+        }
     } catch(err) {
+        console.log('Error in deserialization:', err);
         done(err, null);
     }
 });
